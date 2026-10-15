@@ -89,6 +89,16 @@
 - **⚙️ Customizable Preferences** – Fine-tune sync settings for performance, security, and usability.  
 - **🔔 Smart Update Notifications** – Stay informed about new features, security patches, and enhancements.  
 
+### 🔎 Search links you copied (self-hosted RAG)
+
+The optional RAG feature turns copied links into a searchable collection. When a signed-in device syncs an **unencrypted text** clipboard item containing a supported URL, the server sends the link to a separate ingestion service. That service extracts available page or post text, video subtitles or speech, and image descriptions, then indexes the content in Qdrant. You can search by meaning through the authenticated `GET /rag/search?q=...` endpoint; results are limited to the signed-in user's indexed links.
+
+For example, if you copied a video about fixing a bicycle tire last week but forgot its title or URL, a search for `bike tire repair` can help you find it again. This is useful for rediscovering articles, social posts, and videos you saved by copying their links across devices.
+
+RAG is **off by default** (`CC_RAG_ENABLED=false`). It requires the RAG sidecar, Qdrant, and a Gemini API key for image understanding. The current search interface is an API endpoint; the desktop and mobile apps do not have a RAG search screen. The server must be built from this source for this feature; the published Docker image and release JAR do not include it yet. See the [RAG sidecar README](ClipCascade_Server/ClipCascade_RAG/README.md) for the processing flow and configuration.
+
+**Privacy:** RAG requires the server to read the copied URL and fetch its content, so it cannot index end-to-end encrypted clipboard payloads. Enabling it sends supported links to the configured ingestion service and may send images to Gemini for description. Use it only with a deployment and data flow you trust.
+
    
 <div align="center">
 <table>

@@ -42,7 +42,7 @@ Key env vars (see `app/config.py` for all): `CCRAG_QDRANT_URL`, `CCRAG_AUTH_TOKE
 Transcription uses `faster-whisper` (a required dependency) for videos without
 subtitles. Image understanding/OCR uses the Gemini API (`gemini-3-flash-preview`
 by default, override with `CCRAG_GEMINI_MODEL`) — set `GEMINI_API_KEY` in the
-environment; without it, images are skipped with a warning logged at startup.
+environment; the sidecar will not start without it.
 
 x.com/Twitter post text is fetched via an OpenAI-compatible chat-completions
 endpoint (`HERMES_API_BASE_URL`, default `http://192.168.1.174:8642`; model
