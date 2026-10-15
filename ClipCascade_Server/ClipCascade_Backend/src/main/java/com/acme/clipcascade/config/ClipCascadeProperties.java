@@ -277,6 +277,27 @@ public class ClipCascadeProperties {
     @Value("${CC_DONATIONS_ENABLED:false}")
     private boolean donationsEnabled;
 
+    /*
+     * Flag to enable or disable RAG link ingestion (default: false)
+     * Note: Only works when clients send unencrypted text payloads; encrypted
+     * payloads cannot be inspected for links.
+     */
+    @Value("${CC_RAG_ENABLED:false}")
+    private boolean ragEnabled;
+
+    /*
+     * Base URL of the RAG ingestion sidecar (default: http://localhost:8090)
+     */
+    @Value("${CC_RAG_SIDECAR_URL:http://localhost:8090}")
+    private String ragSidecarUrl;
+
+    /*
+     * Shared secret sent to the RAG sidecar as X-CCRAG-Token (default: empty,
+     * no auth). Must match CCRAG_AUTH_TOKEN on the sidecar.
+     */
+    @Value("${CC_RAG_SIDECAR_TOKEN:}")
+    private String ragSidecarToken;
+
     private long getMessageSizeInBytes() {
         /*
          * Note: Ensure that the same logic is applied in the activemq.xml file as well.
@@ -457,6 +478,22 @@ public class ClipCascadeProperties {
 
     public boolean getDonationsEnabled() {
         return donationsEnabled;
+    }
+
+    public boolean isRagEnabled() {
+        return ragEnabled;
+    }
+
+    public boolean getRagEnabled() {
+        return ragEnabled;
+    }
+
+    public String getRagSidecarUrl() {
+        return ragSidecarUrl;
+    }
+
+    public String getRagSidecarToken() {
+        return ragSidecarToken;
     }
 
     @Override

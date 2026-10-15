@@ -1,0 +1,52 @@
+# # 🌐 GitHub Repository: https://github.com/Sathvik-Rao/ClipCascade
+# # 🐳 ClipCascade Server + RAG link-ingestion sidecar + Qdrant vector store.
+# #
+# # When RAG is enabled, any link copied to the clipboard (x.com, instagram,
+# # tiktok, youtube, or any https page) is fetched, transcribed/extracted and
+# # indexed into Qdrant. Search your clips at GET /rag/search?q=...
+# #
+# # ⚠️ RAG only works when clients send unencrypted text payloads; end-to-end
+# # encrypted clipboards cannot be inspected for links.
+# #
+# # ⚠️ GEMINI_API_KEY is REQUIRED: the sidecar refuses to start without it.
+# # It's used for image posts and as the fallback for videos whose audio
+# # carries no real speech (e.g. background music only).
+
+services:
+  clipcascade:
+    # # 🔨 Built locally: RAG link detection is not in the published image yet.
+    # # Run `./mvnw package -DskipTests` in ClipCascade_Backend before building.
+    build: ../ClipCascade_Backend
+    container_name: clipcascade
+    ports:
+      - 8080:8080
+    restart: always
+    volumes:
+      - ./cc_users:/database
+    environment:
+      - CC_MAX_MESSAGE_SIZE_IN_MiB=1
+      # # ⚙️ Enable RAG link ingestion
+      - CC_RAG_ENABLED=true
+      - CC_RAG_SIDECAR_URL=http://clipcascade-rag:8090
+      # # 🔑 Change this shared secret (must match CCRAG_AUTH_TOKEN below)
+      - CC_RAG_SIDECAR_TOKEN=change-me
+    depends_on:
+      - clipcascade-rag
+
+  clipcascade-rag:
+    build: ../ClipCascade_RAG
+    container_name: clipcascade-rag
+    restart: always
+    ports:
+      - "127.0.0.1:8090:8090"
+    env_file:
+      - ../.env
+    environment:
+      - CCRAG_AUTH_TOKEN=change-me
+      # # ⚙️ Number of concurrent ingestion jobs
+      - CCRAG_WORKER_CONCURRENCY=2
+      # # ⚙️ Set to false to skip Whisper transcription of videos without subtitles
+      - CCRAG_TRANSCRIPTION_ENABLED=true
+      # # 🔑 Required. Gemini API key for image understanding/OCR (passed from
+      # # host env). The sidecar will fail to start if this is empty.
+      - GEMINI_API_KEY=${GEMINI_API_KEY:?GEMINI_API_KEY must be set in the host environment}

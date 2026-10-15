@@ -32,6 +32,7 @@ import com.acme.clipcascade.service.BruteForceProtectionService;
 import com.acme.clipcascade.service.CaptchaService;
 import com.acme.clipcascade.service.DonationService;
 import com.acme.clipcascade.service.FacadeUserService;
+import com.acme.clipcascade.service.RagIngestionDispatcher;
 import com.acme.clipcascade.service.SessionService;
 import com.acme.clipcascade.service.UserInfoService;
 import com.acme.clipcascade.service.UserService;
@@ -67,6 +68,7 @@ public class ClipCascadeController {
     private final BruteForceProtectionService bruteForceProtectionService;
     private final WebSocketStatsService webSocketStatsService;
     private final DonationService donationService;
+    private final RagIngestionDispatcher ragIngestionDispatcher;
 
     public ClipCascadeController(
             ClipCascadeProperties clipCascadeProperties,
@@ -78,7 +80,8 @@ public class ClipCascadeController {
             SessionService sessionService,
             BruteForceProtectionService bruteForceProtectionService,
             WebSocketStatsService webSocketStatsService,
-            DonationService donationService) {
+            DonationService donationService,
+            RagIngestionDispatcher ragIngestionDispatcher) {
 
         this.clipCascadeProperties = clipCascadeProperties;
         this.facadeUserService = facadeUserService;
@@ -90,6 +93,7 @@ public class ClipCascadeController {
         this.bruteForceProtectionService = bruteForceProtectionService;
         this.webSocketStatsService = webSocketStatsService;
         this.donationService = donationService;
+        this.ragIngestionDispatcher = ragIngestionDispatcher;
     }
 
     @PostConstruct
@@ -199,6 +203,13 @@ public class ClipCascadeController {
                 userPrincipal.getUsername(),
                 "/queue/cliptext",
                 messageToSend);
+
+        // If the payload contains an ingestible link, hand it to the RAG
+        // sidecar asynchronously (no-op unless CC_RAG_ENABLED)
+        ragIngestionDispatcher.detectAndDispatch(
+                messageToSend.getPayload(),
+                messageToSend.getType(),
+                userPrincipal.getUsername());
     }
 
     @GetMapping("/captcha")
